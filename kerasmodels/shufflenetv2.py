@@ -1,8 +1,4 @@
 # insighted by https://github.com/tonylins/pytorch-mobilenet-v2/blob/master/MobileNetV2.py
-
-import shy
-shy.err_hook()
-
 import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras.layers import (
@@ -111,16 +107,3 @@ def shufflenet_v2(input_size=224, n_class=1000, width_multiplier=1.0):
     }
 
     return make_shuffleNetV2(input_size=input_size, n_class=n_class, stages_repeats=stage[width_multiplier][0], stages_out_channels=stage[width_multiplier][1])
-
-if __name__ == '__main__':
-    for width_multiplier in [0.5, 1.0, 1.5, 2.0]:
-        model = shufflenet_v2(width_multiplier=width_multiplier)
-        model.summary()
-
-        # h5_path = f'weights/shufflenetv2_x{width_multiplier}.h5'
-        # save_model(model, h5_path)
-        # model.save(h5_path)
-
-        # converter = tf.lite.TFLiteConverter.from_keras_model_file(h5_path)
-        # tflite_model = converter.convert()
-        # open(f'tflite/shufflenetv2_x{width_multiplier}.tflite', 'wb').write(tflite_model)
