@@ -1,3 +1,5 @@
+# codes and weights are converted from https://github.com/pytorch/vision/blob/master/torchvision/models/mnasnet.py copyrighted by soumith
+
 import tensorflow as tf
 import tensorflow.keras as keras
 from tensorflow.keras import backend as K
@@ -11,7 +13,11 @@ from tensorflow.keras.layers import (
 )
 from tensorflow.keras.models import Model, save_model
 
-def _InvertedResidual(inputs, out_ch, kernel_size, strides, expandsion_factor, eps=1e-5, prefix=''):
+_MODEL_URLS = {
+
+}
+
+def _InvertedResidual(inputs, out_ch, kernel_size, strides, expandsion_factor, prefix='', eps=1e-5):
     assert strides in [1, 2]
     assert kernel_size in [3, 5]
     in_ch = inputs.shape[-1]
@@ -38,12 +44,12 @@ def _InvertedResidual(inputs, out_ch, kernel_size, strides, expandsion_factor, e
 
     return x
 
-def _stack(inputs, out_ch, kernel_size, strides, expandsion_factor, repeats, prefix=''):
+def _stack(inputs, out_ch, kernel_size, strides, expandsion_factor, repeats, prefix='', eps=1e-5):
     assert repeats >= 1
 
-    x = _InvertedResidual(inputs, out_ch, kernel_size, strides, expandsion_factor, prefix=f'{prefix}.0')
+    x = _InvertedResidual(inputs, out_ch, kernel_size, strides, expandsion_factor, prefix=f'{prefix}.0', eps=eps)
     for i in range(1, repeats):
-        x = _InvertedResidual(x, out_ch, kernel_size, 1, expandsion_factor, prefix=f'{prefix}.{i}')
+        x = _InvertedResidual(x, out_ch, kernel_size, 1, expandsion_factor, prefix=f'{prefix}.{i}', eps=eps)
     return x
 
 def _round_to_multiple_of(val, divisor, round_up_bias=0.9):
@@ -54,9 +60,9 @@ def _round_to_multiple_of(val, divisor, round_up_bias=0.9):
 def _scale_depths(depths, alpha):
     return [_round_to_multiple_of(depth*alpha, 8) for depth in depths]
 
-def mnasnet(input_size=224, channels=3, width_multiplier=1.0, num_classes=1000, dropout=0.2, eps=1e-5):
+def mnasnet(input_shape=(224, 224, 3), width_multiplier=1.0, num_classes=1000, dropout=0.2, eps=1e-5):
     depths = _scale_depths([24, 40, 80, 96, 192, 320], width_multiplier)
-    inputs = Input(shape=[input_size, input_size, channels])
+    inputs = Input(shape=input_shape)
 
     prefix = 'layers'
     x = inputs
@@ -72,12 +78,12 @@ def mnasnet(input_size=224, channels=3, width_multiplier=1.0, num_classes=1000, 
     x = Conv2D(16, kernel_size=1, strides=1, padding='same', use_bias=False, name=f'{prefix}.6')(x)
     x = BatchNormalization(epsilon=eps, name=f'{prefix}.7')(x)
 
-    x = _stack(x, depths[0], 3, 2, 3, 3, prefix=f'{prefix}.8')
-    x = _stack(x, depths[1], 5, 2, 3, 3, prefix=f'{prefix}.9')
-    x = _stack(x, depths[2], 5, 2, 6, 3, prefix=f'{prefix}.10')
-    x = _stack(x, depths[3], 3, 1, 6, 2, prefix=f'{prefix}.11')
-    x = _stack(x, depths[4], 5, 2, 6, 4, prefix=f'{prefix}.12')
-    x = _stack(x, depths[5], 3, 1, 6, 1, prefix=f'{prefix}.13')
+    x = _stack(x, depths[0], 3, 2, 3, 3, prefix=f'{prefix}.8', eps=eps)
+    x = _stack(x, depths[1], 5, 2, 3, 3, prefix=f'{prefix}.9', eps=eps)
+    x = _stack(x, depths[2], 5, 2, 6, 3, prefix=f'{prefix}.10', eps=eps)
+    x = _stack(x, depths[3], 3, 1, 6, 2, prefix=f'{prefix}.11', eps=eps)
+    x = _stack(x, depths[4], 5, 2, 6, 4, prefix=f'{prefix}.12', eps=eps)
+    x = _stack(x, depths[5], 3, 1, 6, 1, prefix=f'{prefix}.13', eps=eps)
     
     x = Conv2D(1280, kernel_size=1, strides=1, padding='same', use_bias=False, name=f'{prefix}.14')(x)
     x = BatchNormalization(epsilon=eps, name=f'{prefix}.15')(x)
@@ -88,4 +94,29 @@ def mnasnet(input_size=224, channels=3, width_multiplier=1.0, num_classes=1000, 
     x = Dropout(dropout, name=f'{prefix}.0')(x)
     x = Dense(num_classes, name=f'{prefix}.1')(x)
     model = Model(inputs=inputs, outputs=x)
+    return model
+
+
+def mnasnet0_5(pretrained=False, **kwargs):
+    model = mnasnet(width_multiplier=0.5, **kwargs)
+    if pretrained:
+        pass
+    return model
+
+def mnasnet0_75(pretrained=False, **kwargs):
+    model = mnasnet(width_multiplier=0.75, **kwargs)
+    if pretrained:
+        pass
+    return model
+
+def mnasnet1_0(pretrained=False, **kwargs):
+    model = mnasnet(width_multiplier=1.0, **kwargs)
+    if pretrained:
+        pass
+    return model
+
+def mnasnet1_3(pretrained=False, **kwargs):
+    model = mnasnet(width_multiplier=1.3, **kwargs)
+    if pretrained:
+        pass
     return model

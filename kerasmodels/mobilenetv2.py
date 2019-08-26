@@ -1,4 +1,5 @@
-# insighted by https://github.com/pytorch/vision/blob/master/torchvision/models/mobilenet.py
+# codes and weights are converted from https://github.com/pytorch/vision/blob/master/torchvision/models/mobilenet.py copyrighted by soumith
+
 import torch
 import torch.nn  as nn
 from torchvision import models
@@ -13,6 +14,10 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.models import Model, save_model
 
 import numpy as np
+
+_MODEL_URLS = {
+
+}
 
 def _inverted_residual(inputs, inp, oup, stride, expand_ratio, prefix='', eps=1e-5):
     assert stride in [1, 2], f'stride: {stride} not in [1, 2]'
@@ -49,7 +54,7 @@ def _inverted_residual(inputs, inp, oup, stride, expand_ratio, prefix='', eps=1e
         return add([x, inputs])
     return x
 
-def mobilenetv2(n_class=1000, input_size=224, width_mult=1.0, eps=1e-5):
+def mobilenet_v2(input_shape=(224, 224, 3), num_classes=1000, width_multiplier=1.0, eps=1e-5):
 
     inverted_residual_setting = [
         # t, c, n, s
@@ -65,12 +70,12 @@ def mobilenetv2(n_class=1000, input_size=224, width_mult=1.0, eps=1e-5):
     input_channel = 32
     last_channel = 1280
     
-    input_channel = int(input_channel * width_mult)
-    last_channel = max(last_channel, int(last_channel*width_mult))
+    input_channel = int(input_channel * width_multiplier)
+    last_channel = max(last_channel, int(last_channel*width_multiplier))
 
     block = _inverted_residual
 
-    inputs = Input(shape=[input_size, input_size, 3])
+    inputs = Input(shape=input_shape)
 
     prefix = 'features'
     block_no = 0
@@ -82,10 +87,10 @@ def mobilenetv2(n_class=1000, input_size=224, width_mult=1.0, eps=1e-5):
 
     block_no += 1
     for t, c, n, s in inverted_residual_setting:
-        output_channel = int(c*width_mult)
+        output_channel = int(c*width_multiplier)
         for i in range(n):
             stride = s if i==0 else 1
-            x = block(x, input_channel, output_channel, stride, t, f'{prefix}.{block_no}')
+            x = block(x, input_channel, output_channel, stride, t, prefix=f'{prefix}.{block_no}', eps=eps)
             input_channel = output_channel
             block_no += 1
     x = Conv2D(last_channel, kernel_size=1, strides=1, padding='same', use_bias=False, name=f'{prefix}.{block_no}.0')(x)
@@ -95,6 +100,6 @@ def mobilenetv2(n_class=1000, input_size=224, width_mult=1.0, eps=1e-5):
 
     prefix = 'classifier'
     x = Dropout(0.2, name=f'{prefix}.0')(x)
-    x = Dense(n_class, name=f'{prefix}.1')(x)
+    x = Dense(num_classes, name=f'{prefix}.1')(x)
     model = Model(inputs=inputs, outputs=x)
     return model
