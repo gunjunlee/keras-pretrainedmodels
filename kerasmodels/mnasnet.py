@@ -14,7 +14,16 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.models import Model, save_model
 
 _MODEL_URLS = {
-
+    'mnasnet0_5': {
+        'URL': 'https://github.com/kevin970401/keras-pretrainedmodels/releases/download/download/mnasnet0_5.h5',
+        'HASH': '365486e93fc2fcb944056eb76633bcef',
+    },
+    'mnasnet0_75': None,
+    'mnasnet1_0': {
+        'URL': 'https://github.com/kevin970401/keras-pretrainedmodels/releases/download/download/mnasnet1_0.h5',
+        'HASH': '97a03f879ce4893ae44202b44cba1788',
+    },
+    'mnasnet1_3': None,
 }
 
 def _InvertedResidual(inputs, out_ch, kernel_size, strides, expandsion_factor, prefix='', eps=1e-5):
@@ -96,27 +105,35 @@ def mnasnet(input_shape=(224, 224, 3), width_multiplier=1.0, num_classes=1000, d
     model = Model(inputs=inputs, outputs=x)
     return model
 
+def _load_pretrained(model_name, model):
+    if model_name not in _MODEL_URLS or _MODEL_URLS[model_name] is None:
+        raise ValueError("No checkpoint is available for model type {}".format(model_name))
+    checkpoint_url = _MODEL_URLS[model_name]['URL']
+    checkpoint_hash = _MODEL_URLS[model_name]['HASH']
+    weights_path = keras.utils.get_file('{}.h5'.format(model_name), checkpoint_url, cache_subdir='models', file_hash=checkpoint_hash)
+    model.load_weights(weights_path)
+    return model
 
 def mnasnet0_5(pretrained=False, **kwargs):
     model = mnasnet(width_multiplier=0.5, **kwargs)
     if pretrained:
-        pass
+        model = _load_pretrained('mnasnet0_5', model)
     return model
 
 def mnasnet0_75(pretrained=False, **kwargs):
     model = mnasnet(width_multiplier=0.75, **kwargs)
     if pretrained:
-        pass
+        model = _load_pretrained('mnasnet0_75', model)
     return model
 
 def mnasnet1_0(pretrained=False, **kwargs):
     model = mnasnet(width_multiplier=1.0, **kwargs)
     if pretrained:
-        pass
+        model = _load_pretrained('mnasnet1_0', model)
     return model
 
 def mnasnet1_3(pretrained=False, **kwargs):
     model = mnasnet(width_multiplier=1.3, **kwargs)
     if pretrained:
-        pass
+        model = _load_pretrained('mnasnet1_3', model)
     return model

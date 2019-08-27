@@ -1,5 +1,6 @@
 # codes and weights are converted from https://github.com/pytorch/vision/blob/master/torchvision/models/squeezenet.py copyrighted by soumith
 
+from tensorflow import keras
 from tensorflow.keras.layers import (
     Conv2D, ReLU, Dropout, Concatenate, 
     Input, GlobalAveragePooling2D,
@@ -8,7 +9,14 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.models import Model
 
 _MODEL_URLS = {
-
+    'squeezenet1_0': {
+        'URL': 'https://github.com/kevin970401/keras-pretrainedmodels/releases/download/download/squeezenet1_0.h5',
+        'HASH': '02cf552933596c1379207c257dacb8e8'
+        },
+    'squeezenet1_1': {
+        'URL': 'https://github.com/kevin970401/keras-pretrainedmodels/releases/download/download/squeezenet1_1.h5',
+        'HASH': '8b67f4e6eb5d77a00b28215455be7104'
+    },
 }
 
 def fire(inputs, squeeze_planes, expand1x1_planes, expand3x3_planes, prefix=''):
@@ -70,8 +78,23 @@ def squeezenet(input_shape=[224, 224, 3], version='1_0', num_classes=1000):
     model = Model(inputs=inputs, outputs=x)
     return model
 
-def squeezenet1_0(input_shape=(224, 224, 3), num_classes=1000):
-    return squeezenet(input_shape=input_shape, version='1_0', num_classes=num_classes)
+def _load_pretrained(model_name, model):
+    if model_name not in _MODEL_URLS or _MODEL_URLS[model_name] is None:
+        raise ValueError("No checkpoint is available for model type {}".format(model_name))
+    checkpoint_url = _MODEL_URLS[model_name]['URL']
+    checkpoint_hash = _MODEL_URLS[model_name]['HASH']
+    weights_path = keras.utils.get_file('{}.h5'.format(model_name), checkpoint_url, cache_subdir='models', file_hash=checkpoint_hash)
+    model.load_weights(weights_path)
+    return model
 
-def squeezenet1_1(input_shape=(224, 224, 3), num_classes=1000):
-    return squeezenet(input_shape=input_shape, version='1_1', num_classes=num_classes)
+def squeezenet1_0(input_shape=(224, 224, 3), num_classes=1000, pretrained=False):
+    model = squeezenet(input_shape=input_shape, version='1_0', num_classes=num_classes)
+    if pretrained:
+        model = _load_pretrained('squeezenet1_0', model)
+    return model
+
+def squeezenet1_1(input_shape=(224, 224, 3), num_classes=1000, pretrained=False):
+    model = squeezenet(input_shape=input_shape, version='1_1', num_classes=num_classes)
+    if pretrained:
+        model = _load_pretrained('squeezenet1_1', model)
+    return model

@@ -1,7 +1,7 @@
 # codes and weights are converted from https://github.com/pytorch/vision/blob/master/torchvision/models/shufflenetv2.py copyrighted by soumith
 
 import tensorflow as tf
-import tensorflow.keras as keras
+from tensorflow import keras
 from tensorflow.keras.layers import (
     Dense, Conv2D, BatchNormalization, 
     Activation, ReLU, Dropout, Concatenate, 
@@ -13,7 +13,16 @@ from tensorflow.keras.layers import (
 from tensorflow.keras.models import Model, save_model
 
 _MODEL_URLS = {
-
+    'shufflenet_v2_x0_5': {
+        'URL': 'https://github.com/kevin970401/keras-pretrainedmodels/releases/download/download/shufflenet_v2_x0_5.h5',
+        'HASH': 'c47624f0bd2d4a4473a41edb285566ab',
+    },
+    'shufflenet_v2_x1_0': {
+        'URL': 'https://github.com/kevin970401/keras-pretrainedmodels/releases/download/download/shufflenet_v2_x1_0.h5',
+        'HASH': '5ad92b3de8af699539aad6f9f05a8c59',
+    },
+    'shufflenet_v2_x1_5': None,
+    'shufflenet_v2_x2_0': None,
 }
 
 def _ChannelShuffle(inputs, groups):
@@ -114,27 +123,36 @@ def shufflenet_v2(input_shape=(224, 224, 3), num_classes=1000, width_multiplier=
 
     return make_shuffleNetV2(input_shape=input_shape, num_classes=num_classes, stages_repeats=stage[width_multiplier][0], stages_out_channels=stage[width_multiplier][1], eps=eps)
 
+def _load_pretrained(model_name, model):
+    if model_name not in _MODEL_URLS or _MODEL_URLS[model_name] is None:
+        raise ValueError("No checkpoint is available for model type {}".format(model_name))
+    checkpoint_url = _MODEL_URLS[model_name]['URL']
+    checkpoint_hash = _MODEL_URLS[model_name]['HASH']
+    weights_path = keras.utils.get_file('{}.h5'.format(model_name), checkpoint_url, cache_subdir='models', file_hash=checkpoint_hash)
+    model.load_weights(weights_path)
+    return model
+
 def shufflenet_v2_x0_5(pretrained=False, **kwargs):
     model = shufflenet_v2(width_multiplier=0.5, **kwargs)
     if pretrained:
-        pass
+        model = _load_pretrained('shufflenet_v2_x0_5', model)
     return model
 
 def shufflenet_v2_x1_0(pretrained=False, **kwargs):
     model = shufflenet_v2(width_multiplier=1.0, **kwargs)
     if pretrained:
-        pass
+        model = _load_pretrained('shufflenet_v2_x1_0', model)
     return model
 
 def shufflenet_v2_x1_5(pretrained=False, **kwargs):
     model = shufflenet_v2(width_multiplier=1.5, **kwargs)
     if pretrained:
-        pass
+        model = _load_pretrained('shufflenet_v2_x1_5', model)
     return model
 
 def shufflenet_v2_x2_0(pretrained=False, **kwargs):
     model = shufflenet_v2(width_multiplier=2.0, **kwargs)
     if pretrained:
-        pass
+        model = _load_pretrained('shufflenet_v2_x2_0', model)
     return model
 

@@ -16,7 +16,10 @@ from tensorflow.keras.models import Model, save_model
 import numpy as np
 
 _MODEL_URLS = {
-
+    'mobilenet_v2': {
+        'URL': 'https://github.com/kevin970401/keras-pretrainedmodels/releases/download/download/mobilenet_v2.h5',
+        'HASH': 'b9f3a6298793884e6d9118beddbf7351',
+    }
 }
 
 def _inverted_residual(inputs, inp, oup, stride, expand_ratio, prefix='', eps=1e-5):
@@ -54,7 +57,7 @@ def _inverted_residual(inputs, inp, oup, stride, expand_ratio, prefix='', eps=1e
         return add([x, inputs])
     return x
 
-def mobilenet_v2(input_shape=(224, 224, 3), num_classes=1000, width_multiplier=1.0, eps=1e-5):
+def get_mobilenet_v2(input_shape=(224, 224, 3), num_classes=1000, width_multiplier=1.0, eps=1e-5):
 
     inverted_residual_setting = [
         # t, c, n, s
@@ -102,4 +105,19 @@ def mobilenet_v2(input_shape=(224, 224, 3), num_classes=1000, width_multiplier=1
     x = Dropout(0.2, name=f'{prefix}.0')(x)
     x = Dense(num_classes, name=f'{prefix}.1')(x)
     model = Model(inputs=inputs, outputs=x)
+    return model
+
+def _load_pretrained(model_name, model):
+    if model_name not in _MODEL_URLS or _MODEL_URLS[model_name] is None:
+        raise ValueError("No checkpoint is available for model type {}".format(model_name))
+    checkpoint_url = _MODEL_URLS[model_name]['URL']
+    checkpoint_hash = _MODEL_URLS[model_name]['HASH']
+    weights_path = keras.utils.get_file('{}.h5'.format(model_name), checkpoint_url, cache_subdir='models', file_hash=checkpoint_hash)
+    model.load_weights(weights_path)
+    return model
+
+def mobilenet_v2(pretrained=False, **kwargs):
+    model = get_mobilenet_v2(**kwargs)
+    if pretrained:
+        model = _load_pretrained('mobilenet_v2', model)
     return model
