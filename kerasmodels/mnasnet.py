@@ -30,7 +30,9 @@ def _InvertedResidual(inputs, out_ch, kernel_size, strides, expandsion_factor, p
     assert strides in [1, 2]
     assert kernel_size in [3, 5]
     in_ch = inputs.shape[-1]
-    mid_ch = in_ch.value * expandsion_factor
+    if type(in_ch) != int: # tf version < 2
+        in_ch = in_ch.value
+    mid_ch = in_ch * expandsion_factor
     apply_residual = (in_ch == out_ch and strides == 1)
 
     prefix = prefix + '.layers'
