@@ -60,3 +60,5 @@ for model_name in pretrained_models:
     pretrained_keras_model = pth2keras(pretrained_pth_model, keras_model)
     if check(pretrained_pth_model, pretrained_keras_model):
         pretrained_keras_model.save(f'weights/{model_name}.h5')
+    else:
+        print('Error {}'.format(model_name))
